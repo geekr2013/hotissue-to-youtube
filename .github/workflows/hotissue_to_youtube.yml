@@ -1,0 +1,32 @@
+name: Run Hot Issue to YouTube
+
+on:
+  schedule:
+    - cron: '0 11 * * *'  # 매일 오전 11시 (UTC 기준, 필요 시 시간 변환)
+    - cron: '0 17 * * *'  # 매일 오후 5시 (UTC 기준, 필요 시 시간 변환)
+  push:
+    branches:
+      - main
+  workflow_dispatch:  # 수동으로 실행할 수 있도록 추가
+
+jobs:
+  run_script:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.x'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Run hotissue_to_youtube Script
+        run: |
+          python hotissue_to_youtube.py
