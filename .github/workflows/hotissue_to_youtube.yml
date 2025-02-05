@@ -32,6 +32,9 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
+      - name: List installed packages
+        run: pip freeze
+
       - name: Run hotissue_to_youtube Script
         run: |
           python hotissue_to_youtube.py
