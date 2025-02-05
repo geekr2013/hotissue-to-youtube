@@ -40,7 +40,8 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install --force-reinstall --no-cache-dir --no-binary :all: moviepy==2.1.1
+          # 설치된 moviepy가 문제 있으므로 GitHub에서 최신 소스를 직접 설치합니다.
+          pip install git+https://github.com/Zulko/moviepy.git
           pip install -r requirements.txt
 
       - name: "Debug: Check moviepy import and version"
