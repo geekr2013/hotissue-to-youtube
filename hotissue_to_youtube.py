@@ -143,7 +143,6 @@ def authenticate_youtube():
 
 # -------------------------------
 # 업로드 함수 (유머러스한 메타데이터 추가 및 재시도)
-# delete_after_upload 인자를 추가하여, True이면 업로드 후 파일을 삭제합니다.
 # -------------------------------
 def upload_to_youtube(youtube, video_file, title, description, delete_after_upload=True):
     cleaned_title = remove_extension(title)[:97]
@@ -276,12 +275,19 @@ def process_video(input_path, output_path, title):
             bg_music.close()
 
 # -------------------------------
-# 게시글 링크 수집 (Selenium, 헤드리스 모드)
+# 수정된 fetch_post_links() 함수
+# (GitHub Actions 환경에서 Selenium이 안정적으로 작동하도록 Chrome 옵션을 추가)
 # -------------------------------
 def fetch_post_links():
     options = Options()
-    options.add_argument("--headless=new")
+    # 기본 headless 옵션 외 추가 옵션 설정 (GitHub Actions의 Ubuntu 환경에 적합)
+    options.add_argument("--headless")
+    options.add_argument("--no-sandbox")
+    options.add_argument("--disable-dev-shm-usage")
+    options.add_argument("--disable-gpu")
     options.add_argument(f"user-agent={CONFIG['user_agent']}")
+    # Chromium 브라우저가 설치되어 있다면 바이너리 위치 설정 (GitHub Actions에서는 이 경로가 보통 유효합니다)
+    options.binary_location = "/usr/bin/chromium-browser"
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.get(CONFIG["target_url"])
@@ -328,7 +334,7 @@ def main():
                 if len(shorts_video_paths) >= CONFIG["max_videos"]:
                     break
 
-    # 개별 쇼츠 영상 업로드 (delete_after_upload=False로 하여 파일 유지)
+    # 개별 쇼츠 영상 업로드 (파일은 유지하고 업로드 후 나중에 삭제)
     shorts_upload_success_count = 0
     for video in shorts_video_paths:
         video_title = os.path.splitext(os.path.basename(video))[0]
@@ -343,20 +349,18 @@ def main():
     if shorts_video_paths and shorts_upload_success_count == len(shorts_video_paths):
         try:
             merged_clips = []
-            # 병합 단계: 각 영상을 1920x1080 배경에 중앙 배치
             for vp in shorts_video_paths:
                 clip = VideoFileClip(vp)
                 clip_resized = clip.resize(height=1080)
                 background = ColorClip((1920, 1080), color=(0, 0, 0)).set_duration(clip_resized.duration)
                 composite = CompositeVideoClip([background, clip_resized.set_position('center')])
                 merged_clips.append(composite)
-                # ※ clip.close() 제거: composite가 clip에 의존하므로 나중에 composite들을 close할 때 처리합니다.
+                # clip.close()는 composite가 clip 데이터를 필요로 하므로 여기서 바로 닫지 않습니다.
             if merged_clips:
                 merged_video = concatenate_videoclips(merged_clips)
                 merged_video_filename = "merged_normal.mp4"
                 merged_video.write_videofile(merged_video_filename, codec="libx264")
                 merged_video.close()
-                # 합본 제목 생성: 개별 제목들을 "/"로 연결 (길면 100자 이내)
                 merged_title = "합본: " + " / ".join(shorts_video_titles)
                 if len(merged_title) > 100:
                     merged_title = merged_title[:100]
@@ -365,7 +369,6 @@ def main():
                     merged_upload_success = True
                 else:
                     logging.warning(f"합본 영상 업로드 실패: {merged_video_filename}")
-            # 병합에 사용된 composite 클립들 닫기
             for comp in merged_clips:
                 comp.close()
         except Exception as e:
@@ -374,7 +377,6 @@ def main():
         logging.warning("모든 쇼츠 영상이 업로드되지 않아 합본 영상을 생성하지 않습니다.")
     # === END: Merge Shorts into Normal Video Step ===
 
-    # 최종적으로 모든 임시 영상 파일 삭제 (개별 쇼츠 및 합본)
     for video in shorts_video_paths:
         if os.path.exists(video):
             os.remove(video)
