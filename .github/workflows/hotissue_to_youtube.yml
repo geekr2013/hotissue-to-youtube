@@ -40,8 +40,8 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          # 설치된 moviepy가 문제 있으므로 GitHub에서 최신 소스를 직접 설치합니다.
-          pip install git+https://github.com/Zulko/moviepy.git
+          # GitHub 저장소의 최신 moviepy 마스터 브랜치를 강제로 설치하여 editor 모듈이 포함되도록 함.
+          pip install --force-reinstall --no-cache-dir git+https://github.com/Zulko/moviepy.git@master
           pip install -r requirements.txt
 
       - name: "Debug: Check moviepy import and version"
