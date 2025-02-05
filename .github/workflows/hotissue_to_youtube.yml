@@ -40,9 +40,9 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          # 설치된 moviepy가 문제 있으므로 GitHub 저장소의 특정 커밋에서 소스 빌드를 강제합니다.
-          pip install --force-reinstall --no-cache-dir git+https://github.com/Zulko/moviepy.git@1f3631e
-          # requirements.txt에는 moviepy 항목이 없도록 합니다.
+          # GitHub 저장소의 최신 moviepy 소스를 설치합니다.
+          pip install --force-reinstall --no-cache-dir git+https://github.com/Zulko/moviepy.git
+          # requirements.txt에는 moviepy 항목이 없어야 합니다.
           pip install -r requirements.txt
 
       - name: "Debug: Check moviepy import and version"
