@@ -40,15 +40,21 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          # 강제로 GitHub의 master 브랜치에서 moviepy 소스를 소스 빌드 방식으로 설치합니다.
+          # moviepy를 GitHub 저장소에서 소스 빌드 방식으로 설치합니다.
           pip install --force-reinstall --no-cache-dir --no-binary :all: git+https://github.com/Zulko/moviepy.git@master
-          # requirements.txt 파일에는 moviepy 관련 항목이 없어야 합니다.
+          # requirements.txt에는 moviepy 항목이 없어야 합니다.
           pip install -r requirements.txt
 
       - name: "Debug: Check moviepy import and version"
         run: |
           python3 -c "import moviepy; print('moviepy version:', moviepy.__version__); print('moviepy file:', moviepy.__file__)"
           python3 -c "import moviepy.editor; print('moviepy.editor imported successfully')"
+
+      - name: "Debug: List contents of moviepy package directory"
+        run: |
+          MOVIEPY_DIR=$(python3 -c "import moviepy; print(moviepy.__file__.replace('__init__.py',''))")
+          echo "Contents of moviepy directory ($MOVIEPY_DIR):"
+          ls -la $MOVIEPY_DIR
 
       - name: Check Python environment
         run: |
