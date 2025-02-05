@@ -2,7 +2,6 @@ requests
 beautifulsoup4
 selenium
 webdriver-manager
-moviepy==2.1.2
 google-api-python-client
 google-auth
 google-auth-oauthlib
