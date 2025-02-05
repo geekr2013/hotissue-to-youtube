@@ -32,9 +32,11 @@ jobs:
           python -m pip install --upgrade pip
           pip install -r requirements.txt
 
-      - name: List installed packages
-        run: pip freeze
+      - name: Check Python environment
+        run: |
+          which python3
+          python3 --version
+          python3 -m pip freeze
 
       - name: Run hotissue_to_youtube Script
-        run: |
-          python hotissue_to_youtube.py
+        run: python3 hotissue_to_youtube.py
