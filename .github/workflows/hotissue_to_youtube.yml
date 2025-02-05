@@ -35,12 +35,13 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip uninstall -y moviepy
-          pip install moviepy==2.1.2
+          pip install --force-reinstall --no-cache-dir moviepy==2.1.2
           pip install -r requirements.txt
 
-      - name: "Debug: Test moviepy.editor import"
-        run: python3 -c "import moviepy.editor; print('moviepy.editor imported successfully')"
+      - name: Debug: Check moviepy import and version
+        run: |
+          python3 -c "import moviepy; print('moviepy version:', moviepy.__version__); print('moviepy file:', moviepy.__file__)"
+          python3 -c "import moviepy.editor; print('moviepy.editor imported successfully')"
 
       - name: Check Python environment
         run: |
