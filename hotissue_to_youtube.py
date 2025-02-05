@@ -9,6 +9,8 @@ import logging
 import tempfile
 import random
 import functools
+import sys
+print("sys.path:", sys.path)
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
