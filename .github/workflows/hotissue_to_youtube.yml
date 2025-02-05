@@ -2,12 +2,12 @@ name: Run Hot Issue to YouTube
 
 on:
   schedule:
-    - cron: '0 11 * * *'  # 매일 오전 11시 (UTC 기준, 필요 시 시간 변환)
-    - cron: '0 17 * * *'  # 매일 오후 5시 (UTC 기준, 필요 시 시간 변환)
+    - cron: '0 11 * * *'  # 매일 오전 11시 (UTC 기준)
+    - cron: '0 17 * * *'  # 매일 오후 5시 (UTC 기준)
   push:
     branches:
       - main
-  workflow_dispatch:  # 수동으로 실행할 수 있도록 추가
+  workflow_dispatch:
 
 jobs:
   run_script:
@@ -16,6 +16,11 @@ jobs:
     steps:
       - name: Checkout Repository
         uses: actions/checkout@v3
+
+      - name: Install Chromium Browser
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y chromium-browser
 
       - name: Set up Python
         uses: actions/setup-python@v4
