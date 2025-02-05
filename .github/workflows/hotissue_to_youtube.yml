@@ -35,7 +35,7 @@ jobs:
       - name: Install dependencies
         run: |
           python3 -m pip install --upgrade pip
-          pip install --force-reinstall --no-cache-dir moviepy==2.1.2
+          pip install --force-reinstall --no-cache-dir --no-binary :all: moviepy==2.1.1
           pip install -r requirements.txt
 
       - name: "Debug: Check moviepy import and version"
