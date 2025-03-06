@@ -9,8 +9,6 @@ import logging
 import tempfile
 import random
 import functools
-import sys
-print("sys.path:", sys.path)
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from selenium import webdriver
 from selenium.webdriver.chrome.service import Service
@@ -39,7 +37,7 @@ CONFIG = {
     "target_height": 1920,
     "max_videos": 10,
     "landscape_threshold": 1.5,
-    "font_path": "/Users/user/Downloads/Hakgyoansim_Nadeuri.otf",
+    "font_path": "/Users/user/Downloads/SBOTFB.otf",
     "youtube_description": "🔥 짧은 순간에 큰 웃음! 🚀\n매일 업데이트되는 핫한 이슈와 소소한 재미를 만나보세요!\n좋아요 ❤️와 구독 부탁드려요! 🛎️",
     "retry_count": 3,
     "upload_interval": 30,
@@ -78,7 +76,7 @@ def retry_on_false(tries=3, delay=10, backoff=1):
     return decorator
 
 # -------------------------------
-# 배경색에 따른 최적 텍스트 색상 결정 함수 (요구사항 17)
+# 배경색에 따른 최적 텍스트 색상 결정 함수
 # -------------------------------
 def get_optimal_text_color(background_color=(0, 0, 0)):
     r, g, b = background_color
@@ -86,7 +84,7 @@ def get_optimal_text_color(background_color=(0, 0, 0)):
     return "#000000" if brightness > 128 else "#FFD700"
 
 # -------------------------------
-# 유머러스한 메타데이터 생성기 (요구사항 18)
+# 유머러스한 메타데이터 생성기
 # -------------------------------
 def generate_humorous_metadata():
     humorous_lines = [
@@ -99,17 +97,17 @@ def generate_humorous_metadata():
     return random.choice(humorous_lines)
 
 # -------------------------------
-# 제목 정제: 확장자 및 관련 단어 제거 (요구사항 1)
+# 제목 정제: 확장자 및 관련 단어 제거
 # -------------------------------
 def remove_extension(title):
     title = re.sub(r'^[🔥]+', '', title).strip()
-    title = re.sub(r'\.(gif|mov|mp4|m4v|avi|flv|webm)$', '', title, flags=re.IGNORECASE).strip()
-    title = re.sub(r'(?i)(?<!\w)(gif|mov|avi|mp4|m4v|flv|webm)(?!\w)', '', title)
+    title = re.sub(r'\.(gif|mov|mp4|m4v|avi|flv|webm|webp|gi)$', '', title, flags=re.IGNORECASE).strip()
+    title = re.sub(r'(?i)(?<!\w)(gif|mov|avi|mp4|m4v|flv|webm|webp|gi)(?!\w)', '', title)
     title = re.sub(r'\s+', ' ', title).strip()
     return title
 
 # -------------------------------
-# 다운로드 함수 (요구사항 13 적용: 3회 재시도)
+# 다운로드 함수 (3회 재시도)
 # -------------------------------
 @retry_on_false(tries=3, delay=10, backoff=1)
 def download_file(url, output_path):
@@ -144,7 +142,8 @@ def authenticate_youtube():
     return build('youtube', 'v3', credentials=creds)
 
 # -------------------------------
-# 업로드 함수 (유머러스한 메타데이터 추가 및 재시도)
+# 업로드 함수 
+# delete_after_upload 인자를 추가하여, True이면 업로드 후 파일을 삭제합니다.
 # -------------------------------
 def upload_to_youtube(youtube, video_file, title, description, delete_after_upload=True):
     cleaned_title = remove_extension(title)[:97]
@@ -237,10 +236,10 @@ def process_video(input_path, output_path, title):
             final_clip = final_clip.set_audio(final_audio)
         
         text_color = get_optimal_text_color((0, 0, 0))
-        computed_fontsize = int(target_h * 0.05)
+        computed_fontsize = int(target_h * 0.07)
         try:
             title_clip = TextClip(
-                textwrap.fill(title, width=16),
+                textwrap.fill(title, width=8),
                 fontsize=computed_fontsize,
                 color=text_color,
                 font=font_path,
@@ -252,7 +251,7 @@ def process_video(input_path, output_path, title):
         except Exception as e:
             logging.warning(f"폰트 오류 ({str(e)}), 기본 폰트 사용")
             title_clip = TextClip(
-                textwrap.fill(title, width=16),
+                textwrap.fill(title, width=8),
                 fontsize=computed_fontsize,
                 color=text_color,
                 font='AppleGothic',
@@ -261,7 +260,7 @@ def process_video(input_path, output_path, title):
                 stroke_color='black',
                 stroke_width=2
             )
-        title_clip = title_clip.set_position(('center', target_h * 0.1)).set_duration(clip.duration)
+        title_clip = title_clip.set_position(('center', target_h * 0.12)).set_duration(clip.duration)
         final_video = CompositeVideoClip([final_clip, title_clip])
         final_video.write_videofile(output_path, codec="libx264", threads=4)
         return True
@@ -277,19 +276,12 @@ def process_video(input_path, output_path, title):
             bg_music.close()
 
 # -------------------------------
-# 수정된 fetch_post_links() 함수
-# (GitHub Actions 환경에서 Selenium이 안정적으로 작동하도록 Chrome 옵션을 추가)
+# 게시글 링크 수집 (Selenium, 헤드리스 모드)
 # -------------------------------
 def fetch_post_links():
     options = Options()
-    # 기본 headless 옵션 외 추가 옵션 설정 (GitHub Actions의 Ubuntu 환경에 적합)
-    options.add_argument("--headless")
-    options.add_argument("--no-sandbox")
-    options.add_argument("--disable-dev-shm-usage")
-    options.add_argument("--disable-gpu")
+    options.add_argument("--headless=new")
     options.add_argument(f"user-agent={CONFIG['user_agent']}")
-    # Chromium 브라우저가 설치되어 있다면 바이너리 위치 설정 (GitHub Actions에서는 이 경로가 보통 유효합니다)
-    options.binary_location = "/usr/bin/chromium-browser"
     try:
         driver = webdriver.Chrome(service=Service(ChromeDriverManager().install()), options=options)
         driver.get(CONFIG["target_url"])
@@ -336,7 +328,7 @@ def main():
                 if len(shorts_video_paths) >= CONFIG["max_videos"]:
                     break
 
-    # 개별 쇼츠 영상 업로드 (파일은 유지하고 업로드 후 나중에 삭제)
+    # 개별 쇼츠 영상 업로드 (delete_after_upload=False로 하여 파일 유지)
     shorts_upload_success_count = 0
     for video in shorts_video_paths:
         video_title = os.path.splitext(os.path.basename(video))[0]
@@ -357,13 +349,12 @@ def main():
                 background = ColorClip((1920, 1080), color=(0, 0, 0)).set_duration(clip_resized.duration)
                 composite = CompositeVideoClip([background, clip_resized.set_position('center')])
                 merged_clips.append(composite)
-                # clip.close()는 composite가 clip 데이터를 필요로 하므로 여기서 바로 닫지 않습니다.
             if merged_clips:
                 merged_video = concatenate_videoclips(merged_clips)
                 merged_video_filename = "merged_normal.mp4"
                 merged_video.write_videofile(merged_video_filename, codec="libx264")
                 merged_video.close()
-                merged_title = "합본: " + " / ".join(shorts_video_titles)
+                merged_title = " / ".join(shorts_video_titles)
                 if len(merged_title) > 100:
                     merged_title = merged_title[:100]
                 if upload_to_youtube(youtube, merged_video_filename, merged_title, CONFIG["youtube_description"]):
@@ -371,6 +362,7 @@ def main():
                     merged_upload_success = True
                 else:
                     logging.warning(f"합본 영상 업로드 실패: {merged_video_filename}")
+            # 병합에 사용된 composite 클립들 닫기
             for comp in merged_clips:
                 comp.close()
         except Exception as e:
@@ -379,6 +371,7 @@ def main():
         logging.warning("모든 쇼츠 영상이 업로드되지 않아 합본 영상을 생성하지 않습니다.")
     # === END: Merge Shorts into Normal Video Step ===
 
+    # 최종적으로 모든 임시 영상 파일 삭제 (개별 쇼츠 및 합본)
     for video in shorts_video_paths:
         if os.path.exists(video):
             os.remove(video)
