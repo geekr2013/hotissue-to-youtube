@@ -1,6 +1,6 @@
 name: Run Hot Issue to YouTube
 
-on:
+off:
   schedule:
     - cron: '0 11 * * *'  # 매일 오전 11시 (UTC 기준)
     - cron: '0 17 * * *'  # 매일 오후 5시 (UTC 기준)
